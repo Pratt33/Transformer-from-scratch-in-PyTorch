@@ -1,4 +1,3 @@
-# decoder.py
 import torch.nn as nn
 from model.common.normalization import LayerNorm
 
