@@ -6,7 +6,7 @@ def causal_mask(size):
     # creates a lower triangular matrix of ones — position i can attend
     # to positions 0..i but not i+1..size (future positions)
     # shape: (1, size, size) — the 1 allows broadcasting over batch dimension
-    mask = torch.tril(torch.ones(1, size, size)).type(torch.int)
+    mask = torch.tril(torch.ones(1, size, size)).type(torch.bool)
     # return True where attention IS allowed (lower triangle including diagonal)
     return mask == 1
 
@@ -102,7 +102,7 @@ class BilingualDataset(Dataset):
             # encoder mask: 1 where token is real, 0 where [PAD]
             # shape: (1, 1, seq_len) — broadcasts over batch and head dimensions
             'encoder_mask': (encoder_input != self.pad_token.item())
-                            .unsqueeze(0).unsqueeze(0).int(),
+                            .unsqueeze(0).unsqueeze(0),
 
             # decoder mask: combines padding mask AND causal mask
             # padding mask shape: (1, 1, seq_len)
@@ -111,7 +111,7 @@ class BilingualDataset(Dataset):
             # result: (1, seq_len, seq_len) — each position only attends to
             # non-padding positions that came before it
             'decoder_mask': (decoder_input != self.pad_token.item())
-                            .unsqueeze(0).unsqueeze(0).int()
+                            .unsqueeze(0).unsqueeze(0)
                             & causal_mask(decoder_input.size(0)),
 
             # raw text kept for inspection and BLEU evaluation later

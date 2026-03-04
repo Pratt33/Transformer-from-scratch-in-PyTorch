@@ -1,14 +1,14 @@
 import torch.nn as nn
-from encoder.encoder import Encoder
-from encoder.encoderblock import EncoderBlock
-from decoder.decoder import Decoder
-from decoder.decoderblock import DecoderBlock
-from embedding.embedding import TokenEmbedding
-from embedding.encoding import PositionalEncoding
-from transformer.attention import MultiHeadAttention
-from transformer.feedforward import FeedForwardBlock
-from decoder.projection import ProjectionLayer
-from transformer.transformer import Transformer
+from model.encoder.encoder import Encoder
+from model.encoder.encoderblock import EncoderBlock
+from model.decoder.decoder import Decoder
+from model.decoder.decoderblock import DecoderBlock
+from model.embedding.embedding import TokenEmbedding
+from model.embedding.encoding import PositionalEncoding
+from model.transformer.attention import MultiHeadAttention
+from model.transformer.feedforward import FeedForwardBlock
+from model.decoder.projection import ProjectionLayer
+from model.transformer.transformer import Transformer
 from config import device
 
 

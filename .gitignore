@@ -9,3 +9,13 @@ __pycache__/
 
 # OS
 .DS_Store
+
+# tokenizer
+tokenizer_en.json
+tokenizer_mr.json
+
+# training
+runs/
+
+# models
+weights/

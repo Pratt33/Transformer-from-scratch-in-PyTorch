@@ -1,5 +1,5 @@
 import torch.nn as nn
-from normalization import LayerNorm
+from .normalization import LayerNorm
 
 class ResidualConnection(nn.Module):
     # dropout: applied to sublayer output before adding the residual

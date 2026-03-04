@@ -1,14 +1,14 @@
 from datasets import load_dataset
-from torch.utils.data import DataLoader, random_split
-from dataset import BilingualDataset
-from tokenizer import build_tokenizer
+from torch.utils.data import DataLoader
+from .dataset import BilingualDataset
+from .tokenizer import build_tokenizer
 
 
 def get_ds(config):
     # load all three splits from HuggingFace Hub
     # each item: {"translation": {"en": "Hello", "fr": "Bonjour"}}
     raw_train_ds, raw_test_ds, raw_val_ds = load_dataset(
-        'opus-100',
+        'Helsinki-NLP/opus-100',
         f"{config['lang_src']}-{config['lang_tgt']}",
         split=['train', 'test', 'validation']
     )

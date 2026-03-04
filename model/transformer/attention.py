@@ -42,7 +42,7 @@ class MultiHeadAttention(nn.Module):
 
         if mask is not None:
             # set masked positions to large negative value so softmax gives them ~0 weight
-            att_score = att_score.masked_fill(mask == 0, -1e9)
+            att_score = att_score.masked_fill(mask == 0, float('-inf'))
 
         # softmax across last dim — each query position gets a probability
         # distribution over all key positions
@@ -55,8 +55,12 @@ class MultiHeadAttention(nn.Module):
         return (att_score @ value), att_score
 
     def forward(self, q, k, v, mask):
-        B, S, D = q.shape
-        # q, k, v: (batch_size, seq_len, d_model)
+        # q: (B, S_q, d_model) — from decoder in cross-attention, may differ from k/v
+        # k: (B, S_k, d_model) — from encoder output in cross-attention
+        # v: (B, S_k, d_model) — same source as k
+        B = q.size(0)
+        S_q = q.size(1)  # decoder seq len (grows step by step during inference)
+        S_k = k.size(1)  # encoder seq len (fixed at src_seq_len)
 
         q = self.wq(q)  # (batch_size, seq_len, d_model)
         k = self.wk(k)
@@ -67,19 +71,36 @@ class MultiHeadAttention(nn.Module):
         # transpose: (batch_size, num_heads, seq_len, d_k)
         # after transpose each head has its own full sequence — this is what allows
         # each head to independently compute attention across all token positions
-        q = q.view(B, S, self.num_heads, self.d_k).transpose(1, 2)
-        k = k.view(B, S, self.num_heads, self.d_k).transpose(1, 2)
-        v = v.view(B, S, self.num_heads, self.d_k).transpose(1, 2)
+        # split into heads — note separate seq lens for q vs k/v
+        q = q.view(B, S_q, self.num_heads, self.d_k).transpose(1, 2)  # (B, h, S_q, d_k)
+        k = k.view(B, S_k, self.num_heads, self.d_k).transpose(1, 2)  # (B, h, S_k, d_k)
+        v = v.view(B, S_k, self.num_heads, self.d_k).transpose(1, 2)  # (B, h, S_k, d_k)
 
         # run attention independently for all heads simultaneously (parallelized)
-        x, self.att_score = MultiHeadAttention.attention(q, k, v, mask, self.dropout)
+        # swap back to this if need attention weights for visualization
+        #x, self.att_score = MultiHeadAttention.attention(q, k, v, mask, self.dropout)
+
+        # F.scaled_dot_product_attention: PyTorch's built-in fused attention
+        # uses Flash Attention when available — faster and more memory efficient
+        # than manual implementation by avoiding materializing the full (S, S) matrix
+        # dropout_p: float probability — use .p to extract from nn.Dropout object
+        #            disabled during eval by checking self.training
+        # is_causal=False: we handle masking manually through attn_mask
+        x = F.scaled_dot_product_attention(
+            q, k, v,
+            attn_mask=mask,
+            dropout_p=self.dropout.p if self.training else 0.0,
+            is_causal=False
+        )
 
         # recombine heads:
         # transpose: (batch_size, num_heads, seq_len, d_k) -> (batch_size, seq_len, num_heads, d_k)
         # view:      (batch_size, seq_len, num_heads, d_k) -> (batch_size, seq_len, d_model)
         # contiguous() is required before view() because transpose creates a non-contiguous
         # tensor in memory — view() needs contiguous memory to reshape safely
-        x = x.transpose(1, 2).contiguous().view(B, S, self.d_model)
+        # x: (B, h, S_q, d_k) — output always matches query seq len
+        # recombine heads using S_q not S_k
+        x = x.transpose(1, 2).contiguous().view(B, S_q, self.d_model)
 
         # final linear projection: (batch_size, seq_len, d_model)
-        return self.wo(x)
+        return self.wo(x)  # (B, S_q, d_model)
