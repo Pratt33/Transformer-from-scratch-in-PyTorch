@@ -3,6 +3,7 @@ from tokenizers import Tokenizer
 from tokenizers.models import BPE
 from tokenizers.trainers import BpeTrainer
 from tokenizers.pre_tokenizers import Whitespace
+from config import ROOT
 
 
 def get_all_sentences(ds, lang):
@@ -19,7 +20,7 @@ def build_tokenizer(config, ds, lang):
     # check if a pre-trained tokenizer already exists on disk
     # training a BPE tokenizer is slow — we save it after the first run
     # and reload it on subsequent runs to avoid retraining every time
-    tokenizer_path = Path(config['tokenizer_file'].format(lang))
+    tokenizer_path = ROOT / config['tokenizer_file'].format(lang)
 
     if not tokenizer_path.exists():
         # BPE (Byte Pair Encoding) tokenizer — starts with individual characters

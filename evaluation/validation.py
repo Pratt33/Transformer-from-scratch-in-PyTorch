@@ -4,7 +4,7 @@ import torch
 from main import get_model
 from tokenizer.dataloader import get_ds
 from config import device, get_config, get_latest_weights_file_path
-from inference import greedy_decode, beam_search_decode_extra
+from inference import greedy_decode, beam_search_decode
 
 
 def validate_model(model_instance, validation_ds, tokenizer_tgt_inst, max_len,
@@ -32,7 +32,7 @@ def validate_model(model_instance, validation_ds, tokenizer_tgt_inst, max_len,
             # )
 
             # use beam search instead for better translation quality
-            model_out = beam_search_decode_extra(
+            model_out = beam_search_decode(
                 model_instance, encoder_input, encoder_mask,
                 tokenizer_tgt_inst, max_len, device_inst, beam_size=4
             )

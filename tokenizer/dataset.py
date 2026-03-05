@@ -102,7 +102,7 @@ class BilingualDataset(Dataset):
             # encoder mask: 1 where token is real, 0 where [PAD]
             # shape: (1, 1, seq_len) — broadcasts over batch and head dimensions
             'encoder_mask': (encoder_input != self.pad_token.item())
-                            .unsqueeze(0).unsqueeze(0),
+                            .unsqueeze(0).unsqueeze(0).bool(),
 
             # decoder mask: combines padding mask AND causal mask
             # padding mask shape: (1, 1, seq_len)
@@ -111,7 +111,7 @@ class BilingualDataset(Dataset):
             # result: (1, seq_len, seq_len) — each position only attends to
             # non-padding positions that came before it
             'decoder_mask': (decoder_input != self.pad_token.item())
-                            .unsqueeze(0).unsqueeze(0)
+                            .unsqueeze(0).unsqueeze(0).bool()
                             & causal_mask(decoder_input.size(0)),
 
             # raw text kept for inspection and BLEU evaluation later

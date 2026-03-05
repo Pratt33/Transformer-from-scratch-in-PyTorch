@@ -12,7 +12,7 @@ device = (
 
 # resolves to the directory where config.py lives — always the project root
 # regardless of which subfolder the script is run from
-ROOT = Path(__file__).parent
+ROOT = Path(__file__).resolve().parent
 
 def get_config():
     return {
@@ -37,14 +37,14 @@ def get_config():
                                   # opus-100 has this pair
 
         # --- Checkpointing ---
-        'model_folder': 'weights',       # directory where .pt checkpoint files are saved
+        'model_folder': str(ROOT / 'weights'),       # directory where .pt checkpoint files are saved
         'model_basename': 'tmodel_',     # prefix for checkpoint filenames e.g. tmodel_0.pt
         'preload': 'latest',                 # None = start fresh
                                          # 'latest' = resume from most recent checkpoint
                                          # '5' = resume from epoch 5 specifically
 
         # --- Logging ---
-        'tokenizer_file': 'tokenizer_{0}.json',   # {0} is replaced by language code
+        'tokenizer_file': str(ROOT / 'tokenizer_{0}.json'),   # {0} is replaced by language code
         'experiment_name': 'runs/tmodel'          # TensorBoard watches this directory
     }
 
